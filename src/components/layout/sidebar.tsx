@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Building2, Users, FileText,
   Receipt, Settings, LogOut, ChevronRight,
-  TrendingUp, Wallet
+  TrendingUp, Wallet, Menu, X
 } from 'lucide-react'
 import { signOut } from '@/lib/auth-client'
 
@@ -28,62 +28,9 @@ const navigation = [
   { label: 'Paramètres', href: '/parametres', icon: Settings },
 ]
 
-export function Sidebar() {
-  const pathname = usePathname()
-  const router = useRouter()
-
-  return (
-    <aside style={{
-      position: 'fixed', left: 0, top: 0,
-      width: 240, height: '100vh',
-      background: '#0f0f18',
-      borderRight: '1px solid #252538',
-      zIndex: 40, display: 'flex', flexDirection: 'column',
-    }}>
-      {/* Logo */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '16px 16px',
-        borderBottom: '1px solid #1e1e30',
-      }}>
-        <Image
-          src="/logo-webinti2026.png"
-          alt="Webinti"
-          width={32}
-          height={32}
-          style={{ borderRadius: 6, flexShrink: 0, objectFit: 'contain' }}
-        />
-        <div>
-          <p style={{ fontSize: 13, fontWeight: 700, color: '#f0f0ff', lineHeight: 1 }}>Webinti</p>
-          <p style={{ fontSize: 10, color: '#5e5e7a', marginTop: 2, lineHeight: 1 }}>CRM</p>
-        </div>
-      </div>
-
-      {/* Nav */}
-      <nav style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-        {navigation.map((item) =>
-          item.children ? (
-            <NavGroup key={item.label} item={item} pathname={pathname} />
-          ) : (
-            <NavItem key={item.href} item={item as NavItemType} pathname={pathname} />
-          )
-        )}
-      </nav>
-
-      {/* Footer */}
-      <div style={{ padding: '8px', borderTop: '1px solid #1e1e30' }}>
-        <NavButton icon={<LogOut size={14} />} label="Déconnexion" danger onClick={async () => {
-          await signOut()
-          router.push('/login')
-        }} />
-      </div>
-    </aside>
-  )
-}
-
 type NavItemType = { label: string; href: string; icon: React.ElementType }
 
-function NavItem({ item, pathname }: { item: NavItemType; pathname: string }) {
+function NavItem({ item, pathname, onNavigate }: { item: NavItemType; pathname: string; onNavigate?: () => void }) {
   const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
   const Icon = item.icon
   const [hovered, setHovered] = useState(false)
@@ -91,6 +38,7 @@ function NavItem({ item, pathname }: { item: NavItemType; pathname: string }) {
   return (
     <Link
       href={item.href}
+      onClick={onNavigate}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -112,7 +60,7 @@ function NavItem({ item, pathname }: { item: NavItemType; pathname: string }) {
   )
 }
 
-function NavGroup({ item, pathname }: { item: typeof navigation[number]; pathname: string }) {
+function NavGroup({ item, pathname, onNavigate }: { item: typeof navigation[number]; pathname: string; onNavigate?: () => void }) {
   const isGroupActive = item.children?.some(c => pathname === c.href || pathname.startsWith(c.href))
   const [open, setOpen] = useState(!!isGroupActive)
   const [hovered, setHovered] = useState(false)
@@ -155,7 +103,7 @@ function NavGroup({ item, pathname }: { item: typeof navigation[number]; pathnam
             }}
           >
             {item.children?.map((child) => (
-              <NavItem key={child.href} item={child} pathname={pathname} />
+              <NavItem key={child.href} item={child} pathname={pathname} onNavigate={onNavigate} />
             ))}
           </motion.div>
         )}
@@ -183,5 +131,141 @@ function NavButton({ icon, label, danger, onClick }: { icon: React.ReactNode; la
       {icon}
       <span>{label}</span>
     </button>
+  )
+}
+
+function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+  const router = useRouter()
+  return (
+    <>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '16px 16px',
+        borderBottom: '1px solid #1e1e30',
+      }}>
+        <Image
+          src="/logo-webinti2026.png"
+          alt="Webinti"
+          width={32}
+          height={32}
+          style={{ borderRadius: 6, flexShrink: 0, objectFit: 'contain' }}
+        />
+        <div>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#f0f0ff', lineHeight: 1 }}>Webinti</p>
+          <p style={{ fontSize: 10, color: '#5e5e7a', marginTop: 2, lineHeight: 1 }}>CRM</p>
+        </div>
+      </div>
+
+      <nav style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+        {navigation.map((item) =>
+          item.children ? (
+            <NavGroup key={item.label} item={item} pathname={pathname} onNavigate={onNavigate} />
+          ) : (
+            <NavItem key={item.href} item={item as NavItemType} pathname={pathname} onNavigate={onNavigate} />
+          )
+        )}
+      </nav>
+
+      <div style={{ padding: '8px', borderTop: '1px solid #1e1e30' }}>
+        <NavButton icon={<LogOut size={14} />} label="Déconnexion" danger onClick={async () => {
+          await signOut()
+          router.push('/login')
+        }} />
+      </div>
+    </>
+  )
+}
+
+export function Sidebar() {
+  const pathname = usePathname()
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const close = () => setMobileOpen(false)
+
+  return (
+    <>
+      {/* Hamburger — mobile only */}
+      <button
+        className="md:hidden"
+        onClick={() => setMobileOpen(true)}
+        style={{
+          position: 'fixed', top: 12, left: 12, zIndex: 60,
+          width: 36, height: 36, borderRadius: 8,
+          border: '1px solid #252538',
+          background: '#0f0f18',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', color: '#9898b8',
+        }}
+      >
+        <Menu size={18} />
+      </button>
+
+      {/* Backdrop */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            className="md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={close}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 45,
+              background: 'rgba(0,0,0,0.65)',
+              backdropFilter: 'blur(2px)',
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Desktop sidebar */}
+      <aside
+        className="hidden md:flex"
+        style={{
+          position: 'fixed', left: 0, top: 0,
+          width: 240, height: '100vh',
+          background: '#0f0f18',
+          borderRight: '1px solid #252538',
+          zIndex: 40, flexDirection: 'column',
+        }}
+      >
+        <SidebarContent pathname={pathname} />
+      </aside>
+
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.aside
+            className="md:hidden"
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+            style={{
+              position: 'fixed', left: 0, top: 0,
+              width: 280, height: '100vh',
+              background: '#0f0f18',
+              borderRight: '1px solid #252538',
+              zIndex: 50, display: 'flex', flexDirection: 'column',
+            }}
+          >
+            <button
+              onClick={close}
+              style={{
+                position: 'absolute', top: 14, right: 12,
+                width: 28, height: 28, borderRadius: 6,
+                border: '1px solid #252538',
+                background: 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: '#5e5e7a',
+              }}
+            >
+              <X size={14} />
+            </button>
+            <SidebarContent pathname={pathname} onNavigate={close} />
+          </motion.aside>
+        )}
+      </AnimatePresence>
+    </>
   )
 }

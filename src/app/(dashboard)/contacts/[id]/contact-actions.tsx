@@ -111,15 +111,15 @@ export function ContactActions({ contact }: { contact: Contact }) {
       <Dialog open={showEdit} onOpenChange={setShowEdit}>
         <DialogContent title="Modifier le contact">
           <form onSubmit={handleEdit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input label="Prénom *" value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} required />
               <Input label="Nom *" value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} required />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input label="Email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
               <PhoneInput label="Téléphone" value={form.phone} onChange={v => setForm({ ...form, phone: v })} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input label="Poste" value={form.jobTitle} onChange={e => setForm({ ...form, jobTitle: e.target.value })} />
               <div className="flex flex-col gap-1.5">
                 <label style={{ fontSize: 11, fontWeight: 600, color: '#9898b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Rôle</label>

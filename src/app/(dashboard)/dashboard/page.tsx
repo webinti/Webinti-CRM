@@ -69,9 +69,9 @@ export default async function DashboardPage() {
     <div className="flex flex-col min-h-screen">
       <Header title="Tableau de bord" subtitle={`${greeting}, ${firstName} 👋`} />
 
-      <div className="flex-1 p-6 space-y-6 animate-fade-in-up">
+      <div className="flex-1 p-3 sm:p-6 space-y-6 animate-fade-in-up">
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard
             title="Sociétés"
             value={data.companies}

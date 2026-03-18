@@ -122,7 +122,7 @@ export function SocieteActions({ company }: { company: Company }) {
               onChange={e => setForm({ ...form, name: e.target.value })}
               required
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
                 label="Email"
                 type="email"
@@ -135,7 +135,7 @@ export function SocieteActions({ company }: { company: Company }) {
                 onChange={v => setForm({ ...form, phone: v })}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
                 label="Site web"
                 value={form.website}

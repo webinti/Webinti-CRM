@@ -92,7 +92,7 @@ export default function SocietesPage() {
         action={{ label: 'Nouvelle société', onClick: () => setShowCreate(true) }}
       />
 
-      <div className="flex-1 p-6 space-y-4">
+      <div className="flex-1 p-3 sm:p-6 space-y-4">
         {/* Search */}
         <div className="relative max-w-sm">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#5e5e7a' }} />
@@ -110,8 +110,72 @@ export default function SocietesPage() {
           />
         </div>
 
-        {/* Table */}
-        <div style={{ background: '#13131e', border: '1px solid #252538', borderRadius: 8, overflow: 'hidden' }}>
+        {/* Mobile card view */}
+        <div className="md:hidden space-y-2">
+          {loading ? (
+            <div className="text-center py-10 text-[#475569] text-sm">Chargement...</div>
+          ) : companies.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-10">
+              <Building2 size={32} className="text-[#2d3148]" />
+              <p className="text-[#475569] text-sm">Aucune société. <button onClick={() => setShowCreate(true)} className="text-[#6366f1] hover:underline">Créer la première</button></p>
+            </div>
+          ) : (
+            companies.map((company, i) => (
+              <motion.div
+                key={company.id}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                style={{ background: '#13131e', border: '1px solid #252538', borderRadius: 10, padding: '14px 16px' }}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <Link href={`/societes/${company.id}`} className="flex items-center gap-3 min-w-0">
+                    <Avatar name={company.name} size="sm" />
+                    <div className="min-w-0">
+                      <p className="font-medium text-[#f1f5f9] text-sm truncate">{company.name}</p>
+                      {company.siret && <p className="text-xs text-[#64748b] font-mono">{company.siret}</p>}
+                    </div>
+                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-1.5 rounded-lg hover:bg-[#1e1e30] text-[#5e5e7a] hover:text-[#9898b8] transition-colors flex-shrink-0">
+                        <MoreHorizontal size={15} />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem asChild>
+                        <Link href={`/societes/${company.id}`} className="flex items-center gap-2">
+                          <Eye size={14} /> Voir le détail
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem destructive onClick={() => handleDelete(company.id, company.name)}>
+                        <Trash2 size={14} /> Supprimer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                {(company.email || company.phone) && (
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+                    {company.email && (
+                      <span className="flex items-center gap-1.5 text-xs text-[#64748b]">
+                        <Mail size={11} />{company.email}
+                      </span>
+                    )}
+                    {company.phone && (
+                      <span className="flex items-center gap-1.5 text-xs text-[#64748b]">
+                        <Phone size={11} />{company.phone}
+                      </span>
+                    )}
+                  </div>
+                )}
+                <p className="text-xs text-[#475569] mt-2">{formatDate(company.createdAt)}</p>
+              </motion.div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden md:block" style={{ background: '#13131e', border: '1px solid #252538', borderRadius: 8, overflow: 'hidden' }}>
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent" style={{ borderBottom: '1px solid #252538' }}>
@@ -222,7 +286,7 @@ export default function SocietesPage() {
               placeholder="ACME SAS"
               required
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
                 label="Email"
                 type="email"
@@ -236,7 +300,7 @@ export default function SocietesPage() {
                 onChange={v => setForm({ ...form, phone: v })}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
                 label="Site web"
                 value={form.website}

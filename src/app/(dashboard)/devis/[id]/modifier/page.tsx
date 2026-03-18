@@ -127,7 +127,7 @@ export default function ModifierDevisPage({ params }: { params: Promise<{ id: st
   return (
     <div className="flex flex-col min-h-screen">
       <Header title="Modifier le devis" subtitle="Édition" />
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-3 sm:p-6">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-5">
           <Link href={`/devis/${id}`} className="inline-flex items-center gap-1.5 text-sm text-[#64748b] hover:text-[#94a3b8] transition-colors">
             <ArrowLeft size={14} /> Retour au devis
@@ -136,7 +136,7 @@ export default function ModifierDevisPage({ params }: { params: Promise<{ id: st
           {/* Client */}
           <Card>
             <CardHeader><CardTitle>Client</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label style={{ fontSize: 11, fontWeight: 600, color: '#9898b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Société</label>
                 <Select value={form.companyId} onValueChange={handleCompanyChange}>
@@ -188,22 +188,24 @@ export default function ModifierDevisPage({ params }: { params: Promise<{ id: st
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-[1fr_80px_120px_90px_40px] gap-2 px-1">
+              <div className="hidden sm:grid grid-cols-[1fr_80px_120px_90px_40px] gap-2 px-1">
                 {['Description', 'Qté', 'Prix HT', 'Unité', ''].map(h => (
                   <span key={h} className="text-[10px] font-semibold text-[#475569] uppercase tracking-wider">{h}</span>
                 ))}
               </div>
               <AnimatePresence>
                 {items.map((item) => (
-                  <motion.div key={item.id} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.15 }} className="grid grid-cols-[1fr_80px_120px_90px_40px] gap-2 items-start">
+                  <motion.div key={item.id} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.15 }} className="grid grid-cols-[1fr_60px_40px] sm:grid-cols-[1fr_80px_120px_90px_40px] gap-2 items-start">
                     <input type="text" value={item.description} onChange={e => updateItem(item.id, 'description', e.target.value)} placeholder="Développement..." required
                       style={{ height: 36, padding: '0 12px', borderRadius: 8, border: '1px solid #252538', background: '#0d0d14', fontSize: 13, color: '#f0f0ff', outline: 'none', fontFamily: 'inherit', width: '100%' }}
                       className="placeholder:text-[#5e5e7a]" />
                     <input type="number" value={item.quantity} onChange={e => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)} min="0" step="0.5"
                       style={{ height: 36, padding: '0 8px', borderRadius: 8, border: '1px solid #252538', background: '#0d0d14', fontSize: 13, color: '#f0f0ff', outline: 'none', fontFamily: 'inherit', textAlign: 'center', width: '100%' }} />
                     <input type="number" value={item.unitPrice} onChange={e => updateItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)} min="0" step="0.01"
+                      className="hidden sm:block"
                       style={{ height: 36, padding: '0 12px', borderRadius: 8, border: '1px solid #252538', background: '#0d0d14', fontSize: 13, color: '#f0f0ff', outline: 'none', fontFamily: 'inherit', width: '100%' }} />
                     <select value={item.unit} onChange={e => updateItem(item.id, 'unit', e.target.value)}
+                      className="hidden sm:block"
                       style={{ height: 36, padding: '0 8px', borderRadius: 8, border: '1px solid #252538', background: '#0d0d14', fontSize: 13, color: '#f0f0ff', outline: 'none', fontFamily: 'inherit', width: '100%' }}>
                       <option value="forfait">Forfait</option>
                       <option value="heure">Heure</option>

@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Search, Users, Mail, Phone, MoreHorizontal, Trash2, Eye, Edit2, ExternalLink } from 'lucide-react'
+import { Users, Mail, Phone, MoreHorizontal, Trash2, Eye, Edit2 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog'
-import { Input, Textarea } from '@/components/ui/input'
+import { Input } from '@/components/ui/input'
 import { PhoneInput } from '@/components/ui/phone-input'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableEmpty } from '@/components/ui/table'
@@ -132,8 +132,73 @@ export default function ContactsPage() {
         action={{ label: 'Nouveau contact', onClick: () => setShowCreate(true) }}
       />
 
-      <div className="flex-1 p-6">
-        <div style={{ background: '#13131e', border: '1px solid #252538', borderRadius: 8, overflow: 'hidden' }}>
+      <div className="flex-1 p-3 sm:p-6">
+        {/* Mobile card view */}
+        <div className="md:hidden space-y-2">
+          {loading ? (
+            <div className="text-center py-10 text-[#475569] text-sm">Chargement...</div>
+          ) : contacts.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-10">
+              <Users size={32} className="text-[#2d3148]" />
+              <p className="text-[#475569] text-sm">Aucun contact. <button onClick={() => setShowCreate(true)} className="text-[#6366f1] hover:underline">Créer le premier</button></p>
+            </div>
+          ) : (
+            contacts.map((contact, i) => (
+              <motion.div
+                key={contact.id}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                style={{ background: '#13131e', border: '1px solid #252538', borderRadius: 10, padding: '14px 16px' }}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <Link href={`/contacts/${contact.id}`} className="flex items-center gap-3 min-w-0">
+                    <Avatar name={`${contact.firstName} ${contact.lastName}`} size="sm" />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-[#f1f5f9] text-sm">{contact.firstName} {contact.lastName}</p>
+                        {contact.isPrimary && <Badge variant="primary" className="text-[10px]">Principal</Badge>}
+                      </div>
+                      {contact.jobTitle && <p className="text-xs text-[#64748b]">{contact.jobTitle}</p>}
+                      {contact.companyId && (
+                        <p className="text-xs text-[#6366f1]">{companies.find(c => c.id === contact.companyId)?.name}</p>
+                      )}
+                    </div>
+                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-1.5 rounded-lg hover:bg-[#1e1e30] text-[#5e5e7a] hover:text-[#9898b8] transition-colors flex-shrink-0">
+                        <MoreHorizontal size={15} />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem asChild>
+                        <Link href={`/contacts/${contact.id}`} className="flex items-center gap-2">
+                          <Eye size={14} /> Voir le détail
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => openEdit(contact)}>
+                        <Edit2 size={14} /> Modifier
+                      </DropdownMenuItem>
+                      <DropdownMenuItem destructive onClick={() => handleDelete(contact.id, `${contact.firstName} ${contact.lastName}`)}>
+                        <Trash2 size={14} /> Supprimer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                {(contact.email || contact.phone) && (
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+                    {contact.email && <span className="flex items-center gap-1 text-xs text-[#64748b]"><Mail size={10} />{contact.email}</span>}
+                    {contact.phone && <span className="flex items-center gap-1 text-xs text-[#64748b]"><Phone size={10} />{contact.phone}</span>}
+                  </div>
+                )}
+              </motion.div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden md:block" style={{ background: '#13131e', border: '1px solid #252538', borderRadius: 8, overflow: 'hidden' }}>
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent" style={{ borderBottom: '1px solid #252538' }}>
@@ -227,15 +292,15 @@ export default function ContactsPage() {
       <Dialog open={!!editContact} onOpenChange={v => !v && setEditContact(null)}>
         <DialogContent title="Modifier le contact">
           <form onSubmit={handleEdit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input label="Prénom *" value={editForm.firstName} onChange={e => setEditForm({ ...editForm, firstName: e.target.value })} required />
               <Input label="Nom *" value={editForm.lastName} onChange={e => setEditForm({ ...editForm, lastName: e.target.value })} required />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input label="Email" type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
               <PhoneInput label="Téléphone" value={editForm.phone} onChange={v => setEditForm({ ...editForm, phone: v })} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input label="Poste" value={editForm.jobTitle} onChange={e => setEditForm({ ...editForm, jobTitle: e.target.value })} />
               <div className="flex flex-col gap-1.5">
                 <label style={{ fontSize: 11, fontWeight: 600, color: '#9898b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Rôle</label>
@@ -274,15 +339,15 @@ export default function ContactsPage() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent title="Nouveau contact">
           <form onSubmit={handleCreate} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input label="Prénom *" value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} placeholder="Jean" required />
               <Input label="Nom *" value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} placeholder="Dupont" required />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input label="Email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="jean@acme.fr" />
               <PhoneInput label="Téléphone" value={form.phone} onChange={v => setForm({ ...form, phone: v })} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input label="Poste" value={form.jobTitle} onChange={e => setForm({ ...form, jobTitle: e.target.value })} placeholder="Directeur financier" />
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-medium text-[#94a3b8] uppercase tracking-wider">Rôle</label>

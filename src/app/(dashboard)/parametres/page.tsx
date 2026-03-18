@@ -6,6 +6,7 @@ import { Save, Building2, CreditCard, Hash, FileText, Shield } from 'lucide-reac
 import { Header } from '@/components/layout/header'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { toast } from 'sonner'
 
@@ -84,7 +85,7 @@ export default function ParametresPage() {
     <div className="flex flex-col min-h-screen">
       <Header title="Paramètres" subtitle="Configuration de votre CRM" />
 
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-3 sm:p-6">
         <form onSubmit={handleSave} className="max-w-2xl mx-auto space-y-5">
           {/* Identité */}
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
@@ -97,13 +98,17 @@ export default function ParametresPage() {
                 <CardDescription>Informations affichées sur vos documents</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input label="Nom de l'entreprise" {...f('companyName')} placeholder="Webinti" />
                   <Input label="Votre nom complet" {...f('ownerName')} placeholder="Jean Dupont" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input label="Email professionnel" type="email" {...f('email')} placeholder="contact@webinti.com" />
-                  <Input label="Téléphone" type="tel" {...f('phone')} placeholder="+33 6 12 34 56 78" />
+                  <PhoneInput
+                    label="Téléphone"
+                    value={form.phone}
+                    onChange={v => setForm({ ...form, phone: v })}
+                  />
                 </div>
                 <Textarea label="Adresse" {...f('address')} placeholder="12 rue de la Paix, 75001 Paris" rows={2} />
                 <Input label="SIRET" {...f('siret')} placeholder="12345678901234" />
@@ -139,7 +144,7 @@ export default function ParametresPage() {
                 </CardTitle>
                 <CardDescription>Préfixes des numéros de documents (ex: DEV-2025-0001)</CardDescription>
               </CardHeader>
-              <CardContent className="grid grid-cols-3 gap-4">
+              <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Input label="Préfixe devis" {...f('quotePrefix')} placeholder="DEV" />
                 <Input label="Préfixe facture" {...f('invoicePrefix')} placeholder="FAC" />
                 <Input label="Préfixe acompte" {...f('depositPrefix')} placeholder="ACP" />

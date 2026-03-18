@@ -42,7 +42,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
     <div className="flex flex-col min-h-screen">
       <Header title={company.name} subtitle="Fiche société" />
 
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-3 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <Link href="/societes" style={{ fontSize: 13, color: '#5e5e7a', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
             ← Toutes les sociétés

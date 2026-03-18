@@ -51,7 +51,7 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
     <div className="flex flex-col min-h-screen">
       <Header title={`${contact.firstName} ${contact.lastName}`} subtitle="Fiche contact" />
 
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-3 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <Link href="/contacts" style={{ fontSize: 13, color: '#5e5e7a', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
             ← Tous les contacts

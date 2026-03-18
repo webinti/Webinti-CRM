@@ -104,7 +104,7 @@ export default function NouvelleFacturePage() {
     <div className="flex flex-col min-h-screen">
       <Header title="Nouvelle facture" subtitle={quoteId ? 'Depuis un devis' : 'Créer une facture'} />
 
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-3 sm:p-6">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-5">
           <Link href="/factures" className="inline-flex items-center gap-1.5 text-sm text-[#64748b] hover:text-[#94a3b8] transition-colors">
             <ArrowLeft size={14} /> Retour
@@ -112,7 +112,7 @@ export default function NouvelleFacturePage() {
 
           <Card>
             <CardHeader><CardTitle>Client</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-medium text-[#94a3b8] uppercase tracking-wider">Société</label>
                 <Select value={form.companyId} onValueChange={v => setForm({ ...form, companyId: v, contactId: '' })}>
@@ -163,27 +163,64 @@ export default function NouvelleFacturePage() {
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-[1fr_80px_120px_90px_40px] gap-2 px-1">
+              <div className="hidden sm:grid grid-cols-[1fr_80px_120px_90px_40px] gap-2 px-1">
                 {['Description', 'Qté', 'Prix HT', 'Unité', ''].map(h => (
                   <span key={h} className="text-[10px] font-semibold text-[#475569] uppercase tracking-wider">{h}</span>
                 ))}
               </div>
               <AnimatePresence>
                 {items.map((item) => (
-                  <motion.div key={item.id} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }} className="grid grid-cols-[1fr_80px_120px_90px_40px] gap-2 items-start">
-                    <input type="text" value={item.description} onChange={e => updateItem(item.id, 'description', e.target.value)} placeholder="Prestation..." required style={{ height: 36, padding: '0 12px', borderRadius: 8, border: '1px solid #252538', background: '#0d0d14', fontSize: 13, color: '#f0f0ff', outline: 'none', fontFamily: 'inherit', width: '100%' }} className="placeholder:text-[#5e5e7a]" />
-                    <input type="number" value={item.quantity} onChange={e => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)} min="0" step="0.5" style={{ height: 36, padding: '0 8px', borderRadius: 8, border: '1px solid #252538', background: '#0d0d14', fontSize: 13, color: '#f0f0ff', outline: 'none', fontFamily: 'inherit', textAlign: 'center', width: '100%' }} />
-                    <input type="number" value={item.unitPrice} onChange={e => updateItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)} min="0" step="0.01" style={{ height: 36, padding: '0 12px', borderRadius: 8, border: '1px solid #252538', background: '#0d0d14', fontSize: 13, color: '#f0f0ff', outline: 'none', fontFamily: 'inherit', width: '100%' }} />
-                    <select value={item.unit} onChange={e => updateItem(item.id, 'unit', e.target.value)} style={{ height: 36, padding: '0 8px', borderRadius: 8, border: '1px solid #252538', background: '#0d0d14', fontSize: 13, color: '#f0f0ff', outline: 'none', fontFamily: 'inherit', width: '100%' }}>
-                      <option value="forfait">Forfait</option>
-                      <option value="heure">Heure</option>
-                      <option value="jour">Jour</option>
-                      <option value="mois">Mois</option>
-                      <option value="unité">Unité</option>
-                    </select>
-                    <button type="button" onClick={() => removeItem(item.id)} disabled={items.length === 1} style={{ height: 36, width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', color: '#5e5e7a', flexShrink: 0 }} className="hover:text-red-400 hover:bg-[rgba(239,68,68,0.1)] transition-colors disabled:opacity-30">
-                      <Trash2 size={14} />
-                    </button>
+                  <motion.div key={item.id} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }}>
+                    {/* Mobile */}
+                    <div className="sm:hidden space-y-2 p-3 rounded-lg mb-2" style={{ border: '1px solid #252538', background: '#1a1a28' }}>
+                      <input type="text" value={item.description} onChange={e => updateItem(item.id, 'description', e.target.value)} placeholder="Description..." required
+                        style={{ height: 36, padding: '0 12px', borderRadius: 8, border: '1px solid #252538', background: '#0d0d14', fontSize: 13, color: '#f0f0ff', outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' }}
+                        className="placeholder:text-[#5e5e7a]" />
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <p className="text-[10px] text-[#475569] uppercase mb-1">Qté</p>
+                          <input type="number" value={item.quantity} onChange={e => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)} min="0" step="0.5"
+                            style={{ height: 36, padding: '0 8px', borderRadius: 8, border: '1px solid #252538', background: '#0d0d14', fontSize: 13, color: '#f0f0ff', outline: 'none', fontFamily: 'inherit', width: '100%', textAlign: 'center', boxSizing: 'border-box' }} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-[#475569] uppercase mb-1">Prix HT</p>
+                          <input type="number" value={item.unitPrice} onChange={e => updateItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)} min="0" step="0.01"
+                            style={{ height: 36, padding: '0 8px', borderRadius: 8, border: '1px solid #252538', background: '#0d0d14', fontSize: 13, color: '#f0f0ff', outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' }} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-[#475569] uppercase mb-1">Unité</p>
+                          <select value={item.unit} onChange={e => updateItem(item.id, 'unit', e.target.value)}
+                            style={{ height: 36, padding: '0 6px', borderRadius: 8, border: '1px solid #252538', background: '#0d0d14', fontSize: 13, color: '#f0f0ff', outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' }}>
+                            <option value="forfait">Forfait</option>
+                            <option value="heure">Heure</option>
+                            <option value="jour">Jour</option>
+                            <option value="mois">Mois</option>
+                            <option value="unité">Unité</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="flex justify-end">
+                        <button type="button" onClick={() => removeItem(item.id)} disabled={items.length === 1}
+                          style={{ height: 30, padding: '0 10px', borderRadius: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: '#5e5e7a', fontSize: 12 }}
+                          className="hover:text-red-400 transition-colors disabled:opacity-30">Supprimer</button>
+                      </div>
+                    </div>
+                    {/* Desktop */}
+                    <div className="hidden sm:grid grid-cols-[1fr_80px_120px_90px_40px] gap-2 items-start">
+                      <input type="text" value={item.description} onChange={e => updateItem(item.id, 'description', e.target.value)} placeholder="Prestation..." required style={{ height: 36, padding: '0 12px', borderRadius: 8, border: '1px solid #252538', background: '#0d0d14', fontSize: 13, color: '#f0f0ff', outline: 'none', fontFamily: 'inherit', width: '100%' }} className="placeholder:text-[#5e5e7a]" />
+                      <input type="number" value={item.quantity} onChange={e => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)} min="0" step="0.5" style={{ height: 36, padding: '0 8px', borderRadius: 8, border: '1px solid #252538', background: '#0d0d14', fontSize: 13, color: '#f0f0ff', outline: 'none', fontFamily: 'inherit', textAlign: 'center', width: '100%' }} />
+                      <input type="number" value={item.unitPrice} onChange={e => updateItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)} min="0" step="0.01" style={{ height: 36, padding: '0 12px', borderRadius: 8, border: '1px solid #252538', background: '#0d0d14', fontSize: 13, color: '#f0f0ff', outline: 'none', fontFamily: 'inherit', width: '100%' }} />
+                      <select value={item.unit} onChange={e => updateItem(item.id, 'unit', e.target.value)} style={{ height: 36, padding: '0 8px', borderRadius: 8, border: '1px solid #252538', background: '#0d0d14', fontSize: 13, color: '#f0f0ff', outline: 'none', fontFamily: 'inherit', width: '100%' }}>
+                        <option value="forfait">Forfait</option>
+                        <option value="heure">Heure</option>
+                        <option value="jour">Jour</option>
+                        <option value="mois">Mois</option>
+                        <option value="unité">Unité</option>
+                      </select>
+                      <button type="button" onClick={() => removeItem(item.id)} disabled={items.length === 1} style={{ height: 36, width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', color: '#5e5e7a', flexShrink: 0 }} className="hover:text-red-400 hover:bg-[rgba(239,68,68,0.1)] transition-colors disabled:opacity-30">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </motion.div>
                 ))}
               </AnimatePresence>

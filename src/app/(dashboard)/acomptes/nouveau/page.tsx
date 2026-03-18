@@ -92,7 +92,7 @@ export default function NouvelAcomptePage() {
     <div className="flex flex-col min-h-screen">
       <Header title="Nouvel acompte" subtitle="Facture d'acompte à 30%" />
 
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-3 sm:p-6">
         <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-5">
           <Link href="/acomptes" className="inline-flex items-center gap-1.5 text-sm text-[#64748b] hover:text-[#94a3b8] transition-colors">
             <ArrowLeft size={14} /> Retour
@@ -100,7 +100,7 @@ export default function NouvelAcomptePage() {
 
           <Card>
             <CardHeader><CardTitle>Client</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-2 gap-4">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-medium text-[#94a3b8] uppercase tracking-wider">Société</label>
                 <Select value={form.companyId} onValueChange={v => setForm({ ...form, companyId: v })}>

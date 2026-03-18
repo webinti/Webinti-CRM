@@ -12,8 +12,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0d0d14' }}>
-      {/* Spacer pour la sidebar fixed */}
-      <div style={{ width: 240, flexShrink: 0 }} />
+      {/* Spacer for fixed sidebar — desktop only */}
+      <div className="hidden md:block" style={{ width: 240, flexShrink: 0 }} />
       <Sidebar />
       <main className="flex-1 min-w-0 overflow-hidden">
         {children}

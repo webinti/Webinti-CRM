@@ -23,13 +23,14 @@ export function Header({ title, subtitle, action }: HeaderProps) {
     <header style={{
       position: 'sticky', top: 0, zIndex: 30,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      height: 56, padding: '0 24px',
+      height: 56, padding: '0 16px',
       borderBottom: '1px solid #1e1e30',
       background: 'rgba(13,13,20,0.92)',
       backdropFilter: 'blur(12px)',
       WebkitBackdropFilter: 'blur(12px)',
     }}>
-      <div>
+      {/* Left — indented on mobile to leave room for hamburger */}
+      <div className="pl-8 md:pl-2">
         <h1 style={{ fontSize: 15, fontWeight: 600, color: '#f0f0ff', lineHeight: 1, margin: 0 }}>
           {title}
         </h1>
@@ -53,7 +54,7 @@ export function Header({ title, subtitle, action }: HeaderProps) {
             }}
           >
             {action.icon ?? <Plus size={12} />}
-            {action.label}
+            <span className="hidden sm:inline">{action.label}</span>
           </button>
         )}
 

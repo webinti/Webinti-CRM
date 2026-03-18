@@ -49,14 +49,14 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
     <div className="flex flex-col min-h-screen">
       <Header title={quote.number} subtitle="Devis" />
 
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-3 sm:p-6">
         <div className="max-w-4xl mx-auto space-y-5">
           {/* Top bar */}
           <div className="flex items-center justify-between">
             <Link href="/devis" className="inline-flex items-center gap-1.5 text-sm text-[#64748b] hover:text-[#94a3b8] transition-colors">
               <ArrowLeft size={14} /> Retour
             </Link>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap justify-end">
               <Badge status={quote.status}>{QUOTE_STATUS_LABELS[quote.status]}</Badge>
               <QuoteActions
                 quoteId={quote.id}
@@ -69,9 +69,9 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
 
           {/* Document */}
           <Card>
-            <CardContent className="p-8">
+            <CardContent className="p-4 sm:p-8">
               {/* Header document */}
-              <div className="flex items-start justify-between mb-8">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-8">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-7 h-7 rounded-lg gradient-bg flex items-center justify-center">
@@ -84,7 +84,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
                   {appSettings?.email && <p className="text-sm text-[#64748b]">{appSettings.email}</p>}
                   {appSettings?.siret && <p className="text-xs text-[#475569]">SIRET: {appSettings.siret}</p>}
                 </div>
-                <div className="text-right">
+                <div className="sm:text-right">
                   <h2 className="text-2xl font-black gradient-text">{quote.number}</h2>
                   <p className="text-sm text-[#64748b] mt-1">Émis le {formatDateLong(quote.createdAt)}</p>
                   {quote.validUntil && (
@@ -127,8 +127,8 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
               )}
 
               {/* Items table */}
-              <div style={{ border: '1px solid #252538', borderRadius: 8, overflow: 'hidden', marginBottom: 24 }}>
-                <table className="w-full text-sm">
+              <div style={{ border: '1px solid #252538', borderRadius: 8, overflow: 'hidden', marginBottom: 24, overflowX: 'auto' }}>
+                <table className="w-full text-sm" style={{ minWidth: 480 }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid #252538', background: '#1a1a28' }}>
                       <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#475569] uppercase tracking-wider">Description</th>
