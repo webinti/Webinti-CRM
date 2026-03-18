@@ -8,9 +8,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Building2, Users, FileText,
   Receipt, Settings, LogOut, ChevronRight,
-  TrendingUp, Wallet, Menu, X
+  TrendingUp, Wallet, X
 } from 'lucide-react'
 import { signOut } from '@/lib/auth-client'
+import { useMobileNav } from './mobile-nav-context'
 
 const navigation = [
   { label: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
@@ -178,30 +179,13 @@ function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate
 
 export function Sidebar() {
   const pathname = usePathname()
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const close = () => setMobileOpen(false)
+  const { open, close } = useMobileNav()
 
   return (
     <>
-      {/* Hamburger — mobile only */}
-      <button
-        className="md:hidden"
-        onClick={() => setMobileOpen(true)}
-        style={{
-          position: 'fixed', top: 12, left: 12, zIndex: 60,
-          width: 36, height: 36, borderRadius: 8,
-          border: '1px solid #252538',
-          background: '#0f0f18',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', color: '#9898b8',
-        }}
-      >
-        <Menu size={18} />
-      </button>
-
       {/* Backdrop */}
       <AnimatePresence>
-        {mobileOpen && (
+        {open && (
           <motion.div
             className="md:hidden"
             initial={{ opacity: 0 }}
@@ -234,7 +218,7 @@ export function Sidebar() {
 
       {/* Mobile drawer */}
       <AnimatePresence>
-        {mobileOpen && (
+        {open && (
           <motion.aside
             className="md:hidden"
             initial={{ x: '-100%' }}
