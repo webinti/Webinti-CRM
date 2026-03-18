@@ -34,9 +34,9 @@ export function Header({ title, subtitle, action }: HeaderProps) {
     }}>
       {/* Left — burger on mobile + title */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
-        {/* Hamburger — mobile only */}
+        {/* Hamburger — visible on tablet only (bottom nav handles small mobile, sidebar handles desktop) */}
         <button
-          className="md:hidden"
+          className="hidden sm:flex lg:hidden"
           onClick={toggle}
           style={{
             flexShrink: 0,

@@ -187,7 +187,7 @@ export function Sidebar() {
       <AnimatePresence>
         {open && (
           <motion.div
-            className="md:hidden"
+            className="lg:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -204,7 +204,7 @@ export function Sidebar() {
 
       {/* Desktop sidebar */}
       <aside
-        className="hidden md:flex"
+        className="hidden lg:flex"
         style={{
           position: 'fixed', left: 0, top: 0,
           width: 240, height: '100vh',
@@ -220,7 +220,7 @@ export function Sidebar() {
       <AnimatePresence>
         {open && (
           <motion.aside
-            className="md:hidden"
+            className="lg:hidden"
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}

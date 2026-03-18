@@ -25,6 +25,11 @@
 /* ── Base ─────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* ── Disable input zoom on iOS Safari ─────────────── */
+@media (max-width: 1024px) {
+  input, textarea, select { font-size: 16px !important; }
+}
+
 body {
   background: #0d0d14;
   color: #f0f0ff;
