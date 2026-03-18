@@ -1,0 +1,187 @@
+'use client'
+
+import React, { useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  LayoutDashboard, Building2, Users, FileText,
+  Receipt, Settings, LogOut, ChevronRight,
+  TrendingUp, Wallet
+} from 'lucide-react'
+import { signOut } from '@/lib/auth-client'
+
+const navigation = [
+  { label: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Sociétés', href: '/societes', icon: Building2 },
+  { label: 'Contacts', href: '/contacts', icon: Users },
+  {
+    label: 'Facturation',
+    icon: TrendingUp,
+    children: [
+      { label: 'Devis', href: '/devis', icon: FileText },
+      { label: 'Factures', href: '/factures', icon: Receipt },
+      { label: 'Acomptes', href: '/acomptes', icon: Wallet },
+    ],
+  },
+  { label: 'Paramètres', href: '/parametres', icon: Settings },
+]
+
+export function Sidebar() {
+  const pathname = usePathname()
+  const router = useRouter()
+
+  return (
+    <aside style={{
+      position: 'fixed', left: 0, top: 0,
+      width: 240, height: '100vh',
+      background: '#0f0f18',
+      borderRight: '1px solid #252538',
+      zIndex: 40, display: 'flex', flexDirection: 'column',
+    }}>
+      {/* Logo */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '16px 16px',
+        borderBottom: '1px solid #1e1e30',
+      }}>
+        <Image
+          src="/logo-webinti2026.png"
+          alt="Webinti"
+          width={32}
+          height={32}
+          style={{ borderRadius: 6, flexShrink: 0, objectFit: 'contain' }}
+        />
+        <div>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#f0f0ff', lineHeight: 1 }}>Webinti</p>
+          <p style={{ fontSize: 10, color: '#5e5e7a', marginTop: 2, lineHeight: 1 }}>CRM</p>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+        {navigation.map((item) =>
+          item.children ? (
+            <NavGroup key={item.label} item={item} pathname={pathname} />
+          ) : (
+            <NavItem key={item.href} item={item as NavItemType} pathname={pathname} />
+          )
+        )}
+      </nav>
+
+      {/* Footer */}
+      <div style={{ padding: '8px', borderTop: '1px solid #1e1e30' }}>
+        <NavButton icon={<LogOut size={14} />} label="Déconnexion" danger onClick={async () => {
+          await signOut()
+          router.push('/login')
+        }} />
+      </div>
+    </aside>
+  )
+}
+
+type NavItemType = { label: string; href: string; icon: React.ElementType }
+
+function NavItem({ item, pathname }: { item: NavItemType; pathname: string }) {
+  const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
+  const Icon = item.icon
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <Link
+      href={item.href}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '7px 10px', borderRadius: 6,
+        fontSize: 13, fontWeight: 500, textDecoration: 'none',
+        marginBottom: 1,
+        color: isActive ? '#f0f0ff' : hovered ? '#9898b8' : '#5e5e7a',
+        background: isActive ? '#1e1e30' : hovered ? '#16162a' : 'transparent',
+        transition: 'all 0.15s',
+      }}
+    >
+      <Icon size={14} style={{ color: isActive ? '#7ee5aa' : 'currentColor', flexShrink: 0 }} />
+      <span style={{ flex: 1 }}>{item.label}</span>
+      {isActive && (
+        <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#7ee5aa' }} />
+      )}
+    </Link>
+  )
+}
+
+function NavGroup({ item, pathname }: { item: typeof navigation[number]; pathname: string }) {
+  const isGroupActive = item.children?.some(c => pathname === c.href || pathname.startsWith(c.href))
+  const [open, setOpen] = useState(!!isGroupActive)
+  const [hovered, setHovered] = useState(false)
+  const Icon = item.icon
+
+  return (
+    <div style={{ marginBottom: 1 }}>
+      <button
+        onClick={() => setOpen(!open)}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+          padding: '7px 10px', borderRadius: 6,
+          background: hovered ? '#16162a' : 'transparent',
+          border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+          color: isGroupActive ? '#9898b8' : hovered ? '#9898b8' : '#5e5e7a',
+          fontSize: 13, fontWeight: 500, transition: 'all 0.15s',
+        }}
+      >
+        <Icon size={14} style={{ flexShrink: 0 }} />
+        <span style={{ flex: 1, textAlign: 'left' }}>{item.label}</span>
+        <ChevronRight size={12} style={{
+          transition: 'transform 0.2s',
+          transform: open ? 'rotate(90deg)' : 'none',
+          color: '#52525b',
+        }} />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            style={{
+              overflow: 'hidden', marginLeft: 12, paddingLeft: 8,
+              borderLeft: '1px solid #252538', marginTop: 1,
+            }}
+          >
+            {item.children?.map((child) => (
+              <NavItem key={child.href} item={child} pathname={pathname} />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function NavButton({ icon, label, danger, onClick }: { icon: React.ReactNode; label: string; danger?: boolean; onClick: () => void }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+        padding: '7px 10px', borderRadius: 6,
+        background: danger && hovered ? 'rgba(239,68,68,0.08)' : hovered ? '#16162a' : 'transparent',
+        border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+        color: danger && hovered ? '#f87171' : hovered ? '#9898b8' : '#5e5e7a',
+        fontSize: 13, fontWeight: 500, transition: 'all 0.15s',
+      }}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  )
+}
