@@ -6,6 +6,9 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Webinti CRM',
   description: 'Outil de gestion clients, devis et facturation — Webinti',
+  icons: {
+    icon: '/favicon.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

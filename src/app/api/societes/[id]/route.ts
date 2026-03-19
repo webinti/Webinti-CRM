@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { companies, addresses, contacts } from '@/lib/db/schema'
+import { companies, contacts } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { auth } from '@/lib/auth'
@@ -14,6 +14,10 @@ const updateSchema = z.object({
   phone: z.string().optional(),
   website: z.string().optional(),
   notes: z.string().optional(),
+  addressStreet: z.string().optional(),
+  addressCity: z.string().optional(),
+  addressPostalCode: z.string().optional(),
+  addressCountry: z.string().optional(),
 })
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -25,12 +29,9 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
   const [company] = await db.select().from(companies).where(eq(companies.id, id))
   if (!company) return NextResponse.json({ error: 'Introuvable' }, { status: 404 })
 
-  const [companyAddresses, companyContacts] = await Promise.all([
-    db.select().from(addresses).where(eq(addresses.companyId, id)),
-    db.select().from(contacts).where(eq(contacts.companyId, id)),
-  ])
+  const companyContacts = await db.select().from(contacts).where(eq(contacts.companyId, id))
 
-  return NextResponse.json({ ...company, addresses: companyAddresses, contacts: companyContacts })
+  return NextResponse.json({ ...company, contacts: companyContacts })
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

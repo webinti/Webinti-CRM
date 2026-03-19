@@ -1,0 +1,227 @@
+{
+  "name": "Prospection Webinti - Pappers",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Rotation des départements - 1 par jour\nconst departements = ['75', '69', '33', '13', '31', '44', '34', '06', '59', '38', '83', '974'];\nconst today = new Date().getDate();\nconst deptIndex = today % departements.length;\n\nreturn [{\n  departement: departements[deptIndex],\n  page: 1\n}];"
+      },
+      "name": "1 Département/jour",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.pappers.fr/v2/recherche",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {"name": "api_token", "value": "4bb362fd8f0bd6c9834d3b51d03c7ff03783afad60225940"},
+            {"name": "code_postal", "value": "={{ $json.departement }}"},
+            {"name": "page", "value": "={{ $json.page }}"},
+            {"name": "par_page", "value": "20"},
+            {"name": "entreprise_cessee", "value": "false"}
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "API Pappers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "resultats",
+        "options": {}
+      },
+      "name": "Split entreprises",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "seconds"
+      },
+      "name": "Wait 3s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "webhookId": "wait-3s"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.site_web }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Check site",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "site-existe",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": "200",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      },
+      "name": "Site existe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={{ $json.site_web }}&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO&strategy=MOBILE",
+        "options": {
+          "timeout": 45000
+        }
+      },
+      "name": "Lighthouse",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1650, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const lighthouse = $json.lighthouseResult;\nif (!lighthouse) {\n  return [{ score: 0, issues: ['Analyse impossible'] }];\n}\n\nconst categories = lighthouse.categories;\nconst audits = lighthouse.audits;\n\nconst scores = {\n  performance: Math.round(categories.performance.score * 100),\n  accessibility: Math.round(categories.accessibility.score * 100),\n  bestPractices: Math.round(categories['best-practices'].score * 100),\n  seo: Math.round(categories.seo.score * 100)\n};\n\nconst issues = [];\nif (scores.performance < 50) issues.push('Site lent sur mobile');\nif (scores.accessibility < 70) issues.push('Problèmes accessibilité');\nif (scores.seo < 70) issues.push('Mal référencé sur Google');\nif (!audits['uses-https']?.score) issues.push('Pas de HTTPS sécurisé');\nif (audits['viewport']?.score === 0) issues.push('Pas optimisé mobile');\n\nconst globalScore = Math.round(\n  scores.performance * 0.4 +\n  scores.accessibility * 0.2 +\n  scores.bestPractices * 0.2 +\n  scores.seo * 0.2\n);\n\nreturn [{\n  websiteScore: globalScore,\n  websiteIssues: issues,\n  lighthouseScores: scores,\n  hasWebsite: true\n}];"
+      },
+      "name": "Analyse scores",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1850, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  websiteScore: 0,\n  websiteIssues: ['Site inaccessible ou inexistant'],\n  hasWebsite: false\n}];"
+      },
+      "name": "Pas de site",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1650, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://crm.webinti.com/api/leads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Authorization", "value": "Bearer n8n-webinti-token-2024-secure"}
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {"name": "siren", "value": "={{ $json.siren }}"},
+            {"name": "siret", "value": "={{ $json.siege.siret }}"},
+            {"name": "companyName", "value": "={{ $json.nom_entreprise }}"},
+            {"name": "legalForm", "value": "={{ $json.forme_juridique }}"},
+            {"name": "nafCode", "value": "={{ $json.code_naf }}"},
+            {"name": "nafLabel", "value": "={{ $json.libelle_code_naf }}"},
+            {"name": "address", "value": "={{ $json.siege.adresse_ligne_1 }}"},
+            {"name": "postalCode", "value": "={{ $json.siege.code_postal }}"},
+            {"name": "city", "value": "={{ $json.siege.ville }}"},
+            {"name": "department", "value": "={{ $json.siege.departement }}"},
+            {"name": "email", "value": "={{ $json.email }}"},
+            {"name": "phone", "value": "={{ $json.telephone }}"},
+            {"name": "website", "value": "={{ $json.site_web }}"},
+            {"name": "hasWebsite", "value": "={{ $json.site_web ? true : false }}"},
+            {"name": "websiteScore", "value": "={{ $json.websiteScore || 0 }}"},
+            {"name": "websiteIssues", "value": "={{ JSON.stringify($json.websiteIssues || []) }}"},
+            {"name": "source", "value": "pappers"},
+            {"name": "status", "value": "new"},
+            {"name": "priority", "value": "={{ $json.websiteScore < 30 ? 80 : $json.websiteScore < 60 ? 60 : 40 }}"}
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Créer Lead CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2050, 300],
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Schedule": {
+      "main": [[{"node": "1 Département/jour", "type": "main", "index": 0}]]
+    },
+    "1 Département/jour": {
+      "main": [[{"node": "API Pappers", "type": "main", "index": 0}]]
+    },
+    "API Pappers": {
+      "main": [[{"node": "Split entreprises", "type": "main", "index": 0}]]
+    },
+    "Split entreprises": {
+      "main": [[{"node": "Wait 3s", "type": "main", "index": 0}]]
+    },
+    "Wait 3s": {
+      "main": [[{"node": "Check site", "type": "main", "index": 0}]]
+    },
+    "Check site": {
+      "main": [[{"node": "Site existe?", "type": "main", "index": 0}]]
+    },
+    "Site existe?": {
+      "main": [
+        [{"node": "Lighthouse", "type": "main", "index": 0}],
+        [{"node": "Pas de site", "type": "main", "index": 0}]
+      ]
+    },
+    "Lighthouse": {
+      "main": [[{"node": "Analyse scores", "type": "main", "index": 0}]]
+    },
+    "Analyse scores": {
+      "main": [[{"node": "Créer Lead CRM", "type": "main", "index": 0}]]
+    },
+    "Pas de site": {
+      "main": [[{"node": "Créer Lead CRM", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

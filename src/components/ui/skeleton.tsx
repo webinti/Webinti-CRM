@@ -79,7 +79,7 @@ export function SkeletonDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Left */}
           <div className="lg:col-span-1 space-y-4">
-            <div style={{ background: '#13131e', border: '1px solid #252538', borderRadius: 12, padding: 20, space: 12 }}>
+            <div style={{ background: '#13131e', border: '1px solid #252538', borderRadius: 12, padding: 20 }}>
               <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
                 <Skeleton style={{ width: 48, height: 48, borderRadius: '50%', flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>

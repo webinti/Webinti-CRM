@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { MoreHorizontal, Send, CheckCircle, XCircle, Trash2, Receipt, Wallet, Mail, Edit2 } from 'lucide-react'
+import { MoreHorizontal, Send, CheckCircle, XCircle, Trash2, Receipt, Wallet, Mail, Edit2, Eye } from 'lucide-react'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog'
@@ -18,13 +18,12 @@ interface QuoteActionsProps {
 
 export function QuoteActions({ quoteId, currentStatus, defaultEmail = '', defaultName = '' }: QuoteActionsProps) {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
   const [showSendDialog, setShowSendDialog] = useState(false)
   const [sending, setSending] = useState(false)
+  const [previewSending, setPreviewSending] = useState(false)
   const [sendForm, setSendForm] = useState({ email: defaultEmail, name: defaultName })
 
   const updateStatus = async (status: string) => {
-    setLoading(true)
     const updates: any = { status }
     if (status === 'sent') updates.sentAt = new Date().toISOString()
     if (status === 'accepted') updates.signedAt = new Date().toISOString()
@@ -41,7 +40,6 @@ export function QuoteActions({ quoteId, currentStatus, defaultEmail = '', defaul
     } else {
       toast.error('Erreur')
     }
-    setLoading(false)
   }
 
   const handleSendEmail = async (e: React.FormEvent) => {
@@ -64,11 +62,35 @@ export function QuoteActions({ quoteId, currentStatus, defaultEmail = '', defaul
     setSending(false)
   }
 
+  const handleSendPreview = async () => {
+    setPreviewSending(true)
+    const res = await fetch(`/api/devis/${quoteId}/envoyer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        recipientEmail: 'agence.webinti@gmail.com', 
+        recipientName: 'Tim - Webinti',
+        isPreview: true 
+      }),
+    })
+    if (res.ok) {
+      toast.success('Aperçu envoyé à agence.webinti@gmail.com')
+    } else {
+      const err = await res.json().catch(() => ({}))
+      toast.error(err.error ?? "Erreur lors de l'envoi")
+    }
+    setPreviewSending(false)
+  }
+
   const handleDelete = async () => {
     if (!confirm('Supprimer ce devis ?')) return
-    await fetch(`/api/devis/${quoteId}`, { method: 'DELETE' })
-    toast.success('Devis supprimé')
-    router.push('/devis')
+    const res = await fetch(`/api/devis/${quoteId}`, { method: 'DELETE' })
+    if (res.ok) {
+      toast.success('Devis supprimé')
+      router.push('/devis')
+    } else {
+      toast.error('Erreur lors de la suppression')
+    }
   }
 
   return (
@@ -113,6 +135,11 @@ export function QuoteActions({ quoteId, currentStatus, defaultEmail = '', defaul
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
+            <DropdownMenuLabel>Aperçu</DropdownMenuLabel>
+            <DropdownMenuItem onClick={handleSendPreview} disabled={previewSending}>
+              <Eye size={14} /> {previewSending ? 'Envoi...' : "M'envoyer l'aperçu"}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuLabel>Statut</DropdownMenuLabel>
             {currentStatus !== 'sent' && (
               <DropdownMenuItem onClick={() => updateStatus('sent')}>

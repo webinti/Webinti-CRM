@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Building2, Users, FileText, Menu } from 'lucide-react'
+import { LayoutDashboard, Building2, Users, Target, Menu } from 'lucide-react'
 import { useMobileNav } from './mobile-nav-context'
 import { motion } from 'framer-motion'
 
@@ -10,7 +10,7 @@ const tabs = [
   { label: 'Accueil', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Sociétés', href: '/societes', icon: Building2 },
   { label: 'Contacts', href: '/contacts', icon: Users },
-  { label: 'Devis', href: '/devis', icon: FileText },
+  { label: 'Prospection', href: '/leads', icon: Target },
 ]
 
 export function BottomNav() {
@@ -19,14 +19,13 @@ export function BottomNav() {
 
   return (
     <nav
-      className="lg:hidden"
+      className="flex lg:!hidden"
       style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40,
         background: 'rgba(13,13,20,0.96)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         borderTop: '1px solid #252538',
-        display: 'flex',
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >

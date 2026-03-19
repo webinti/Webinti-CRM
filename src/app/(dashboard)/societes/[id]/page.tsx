@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import Link from 'next/link'
 import { db } from '@/lib/db'
-import { companies, contacts, addresses, quotes, invoices } from '@/lib/db/schema'
+import { companies, contacts, quotes, invoices } from '@/lib/db/schema'
 import { eq, desc } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
 import { Header } from '@/components/layout/header'
@@ -21,14 +21,13 @@ async function getCompany(id: string) {
   const [company] = await db.select().from(companies).where(eq(companies.id, id))
   if (!company) return null
 
-  const [companyContacts, companyAddresses, companyQuotes, companyInvoices] = await Promise.all([
+  const [companyContacts, companyQuotes, companyInvoices] = await Promise.all([
     db.select().from(contacts).where(eq(contacts.companyId, id)),
-    db.select().from(addresses).where(eq(addresses.companyId, id)),
     db.select().from(quotes).where(eq(quotes.companyId, id)).orderBy(desc(quotes.createdAt)).limit(5),
     db.select().from(invoices).where(eq(invoices.companyId, id)).orderBy(desc(invoices.createdAt)).limit(5),
   ])
 
-  return { company, contacts: companyContacts, addresses: companyAddresses, quotes: companyQuotes, invoices: companyInvoices }
+  return { company, contacts: companyContacts, quotes: companyQuotes, invoices: companyInvoices }
 }
 
 export default async function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -36,7 +35,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
   const data = await getCompany(id)
   if (!data) notFound()
 
-  const { company, contacts: cts, addresses: addrs, quotes: qts, invoices: invs } = data
+  const { company, contacts: cts, quotes: qts, invoices: invs } = data
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -107,40 +106,30 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
               </CardContent>
             </Card>
 
-            {/* Adresses */}
+            {/* Adresse */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sm">
                   <MapPin size={14} style={{ color: '#7ee5aa' }} />
-                  Adresses
+                  Adresse
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {addrs.length === 0 ? (
+                {!company.addressStreet ? (
                   <p style={{ fontSize: 13, color: '#5e5e7a' }}>Aucune adresse enregistrée</p>
                 ) : (
-                  <div className="space-y-3">
-                    {addrs.map((addr) => {
-                      const mapsQuery = encodeURIComponent(`${addr.street}, ${addr.postalCode} ${addr.city}, ${addr.country}`)
-                      return (
-                        <div key={addr.id} style={{ fontSize: 13 }}>
-                          <p style={{ fontSize: 10, color: '#5e5e7a', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
-                            {addr.type === 'billing' ? 'Facturation' : addr.type === 'shipping' ? 'Livraison' : 'Autre'}
-                          </p>
-                          <p style={{ color: '#9898b8' }}>{addr.street}</p>
-                          <p style={{ color: '#9898b8' }}>{addr.postalCode} {addr.city}</p>
-                          <p style={{ color: '#5e5e7a' }}>{addr.country}</p>
-                          <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${mapsQuery}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 6, fontSize: 11, color: '#7ee5aa', textDecoration: 'none' }}
-                          >
-                            <MapPin size={11} /> Voir sur Google Maps →
-                          </a>
-                        </div>
-                      )
-                    })}
+                  <div style={{ fontSize: 13 }}>
+                    <p style={{ color: '#9898b8' }}>{company.addressStreet}</p>
+                    <p style={{ color: '#9898b8' }}>{company.addressPostalCode} {company.addressCity}</p>
+                    <p style={{ color: '#5e5e7a' }}>{company.addressCountry}</p>
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.addressStreet}, ${company.addressPostalCode} ${company.addressCity}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 6, fontSize: 11, color: '#7ee5aa', textDecoration: 'none' }}
+                    >
+                      <MapPin size={11} /> Voir sur Google Maps →
+                    </a>
                   </div>
                 )}
               </CardContent>

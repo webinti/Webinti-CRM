@@ -1,0 +1,402 @@
+{
+  "name": "Prospection Webinti - TPE/PME",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Génère les requêtes pour chaque département + code NAF (SAS/SARL)\nconst departements = ['75', '69', '33', '13', '31', '44', '34', '06', '59', '38'];\nconst formesJuridiques = ['5710', '5720']; // SAS, SARL\nconst queries = [];\n\nfor (const dept of departements) {\n  for (const fj of formesJuridiques) {\n    for (let page = 1; page <= 2; page++) {\n      queries.push({ \n        departement: dept,\n        formeJuridique: fj,\n        page: page \n      });\n    }\n  }\n}\n\nreturn queries;"
+      },
+      "id": "generate-queries",
+      "name": "Génère requêtes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://recherche-entreprises.api.gouv.fr/search?activite_principale={{ $json.formeJuridique }}&code_postal={{ $json.departement }}*&page={{ $json.page }}&per_page=25&etat_administratif=A",
+        "options": {}
+      },
+      "id": "api-gouv",
+      "name": "API Gouv - Recherche",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "id": "split-entreprises",
+      "name": "Split entreprises",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.siege.url }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "check-website",
+      "name": "Check site web",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1050,
+        300
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "site-existe",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": "200",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "site-existe",
+      "name": "Site existe ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={{ $json.siege.url }}&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO&strategy=MOBILE",
+        "options": {}
+      },
+      "id": "lighthouse",
+      "name": "Lighthouse API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1450,
+        200
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupère les données entreprise originales\nconst entreprise = $('Split entreprises').item.json;\n\nconst lighthouse = $json.lighthouseResult;\nif (!lighthouse) {\n  return [{ ...entreprise, websiteScore: 0, websiteIssues: ['Impossible d\\'analyser le site'], hasWebsite: true }];\n}\n\nconst categories = lighthouse.categories;\nconst audits = lighthouse.audits;\n\nconst scores = {\n  performance: Math.round(categories.performance.score * 100),\n  accessibility: Math.round(categories.accessibility.score * 100),\n  bestPractices: Math.round(categories['best-practices'].score * 100),\n  seo: Math.round(categories.seo.score * 100)\n};\n\nconst issues = [];\nif (scores.performance < 50) issues.push('Site très lent sur mobile');\nif (scores.accessibility < 70) issues.push('Problèmes d\\'accessibilité');\nif (scores.seo < 70) issues.push('Mal référencé sur Google');\nif (!audits['uses-https']?.score) issues.push('Pas de HTTPS sécurisé');\nif (audits['viewport']?.score === 0) issues.push('Pas optimisé pour mobile');\n\nconst globalScore = Math.round(\n  scores.performance * 0.4 +\n  scores.accessibility * 0.2 +\n  scores.bestPractices * 0.2 +\n  scores.seo * 0.2\n);\n\nreturn [{\n  ...entreprise,\n  websiteScore: globalScore,\n  websiteIssues: issues,\n  lighthouseScores: scores,\n  hasWebsite: true\n}];"
+      },
+      "id": "analyze-scores",
+      "name": "Analyse scores",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1650,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupère les données entreprise originales\nconst entreprise = $('Split entreprises').item.json;\n\nreturn [{\n  ...entreprise,\n  websiteScore: 0,\n  websiteIssues: ['Site inaccessible ou inexistant'],\n  hasWebsite: false\n}];"
+      },
+      "id": "no-website",
+      "name": "Pas de site",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1450,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "score-faible",
+              "leftValue": "={{ $json.websiteScore }}",
+              "rightValue": "60",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ]
+        }
+      },
+      "id": "score-faible",
+      "name": "Score < 60 ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1850,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://crm.webinti.com/api/leads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer n8n-webinti-token-2024-secure"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "siren",
+              "value": "={{ $json.siren }}"
+            },
+            {
+              "name": "siret",
+              "value": "={{ $json.siege.siret }}"
+            },
+            {
+              "name": "companyName",
+              "value": "={{ $json.nom_complet }}"
+            },
+            {
+              "name": "legalForm",
+              "value": "={{ $json.nature_juridique }}"
+            },
+            {
+              "name": "nafCode",
+              "value": "={{ $json.activite_principale }}"
+            },
+            {
+              "name": "address",
+              "value": "={{ $json.siege.adresse }}"
+            },
+            {
+              "name": "postalCode",
+              "value": "={{ $json.siege.code_postal }}"
+            },
+            {
+              "name": "city",
+              "value": "={{ $json.siege.libelle_commune }}"
+            },
+            {
+              "name": "department",
+              "value": "={{ $json.siege.departement }}"
+            },
+            {
+              "name": "website",
+              "value": "={{ $json.siege.url }}"
+            },
+            {
+              "name": "hasWebsite",
+              "value": "={{ $json.hasWebsite }}"
+            },
+            {
+              "name": "websiteScore",
+              "value": "={{ $json.websiteScore }}"
+            },
+            {
+              "name": "websiteIssues",
+              "value": "={{ JSON.stringify($json.websiteIssues) }}"
+            },
+            {
+              "name": "source",
+              "value": "api_gouv"
+            },
+            {
+              "name": "status",
+              "value": "new"
+            },
+            {
+              "name": "priority",
+              "value": "={{ $json.websiteScore < 30 ? 80 : $json.websiteScore < 60 ? 60 : 40 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "create-lead",
+      "name": "Créer Lead CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        2050,
+        200
+      ],
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Schedule": {
+      "main": [
+        [
+          {
+            "node": "Génère requêtes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Génère requêtes": {
+      "main": [
+        [
+          {
+            "node": "API Gouv - Recherche",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API Gouv - Recherche": {
+      "main": [
+        [
+          {
+            "node": "Split entreprises",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split entreprises": {
+      "main": [
+        [
+          {
+            "node": "Check site web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check site web": {
+      "main": [
+        [
+          {
+            "node": "Site existe ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Site existe ?": {
+      "main": [
+        [
+          {
+            "node": "Lighthouse API",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pas de site",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lighthouse API": {
+      "main": [
+        [
+          {
+            "node": "Analyse scores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyse scores": {
+      "main": [
+        [
+          {
+            "node": "Score < 60 ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pas de site": {
+      "main": [
+        [
+          {
+            "node": "Créer Lead CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score < 60 ?": {
+      "main": [
+        [
+          {
+            "node": "Créer Lead CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

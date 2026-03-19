@@ -2,14 +2,14 @@ import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import Link from 'next/link'
 import { db } from '@/lib/db'
-import { quotes, quoteItems, companies, contacts, settings, addresses } from '@/lib/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { quotes, quoteItems, companies, contacts, settings } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
 import { Header } from '@/components/layout/header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate, formatDateLong, QUOTE_STATUS_LABELS } from '@/lib/utils'
-import { Building2, User, Calendar, ArrowLeft, FileText } from 'lucide-react'
+import { ArrowLeft, FileText } from 'lucide-react'
 import { QuoteActions } from './quote-actions'
 
 async function getQuote(id: string) {
@@ -30,9 +30,12 @@ async function getQuote(id: string) {
   const contact = quote.contactId
     ? (await db.select().from(contacts).where(eq(contacts.id, quote.contactId)))[0]
     : null
-  const billingAddress = company
-    ? (await db.select().from(addresses).where(and(eq(addresses.companyId, company.id), eq(addresses.type, 'billing'))))[0] ?? null
-    : null
+  const billingAddress = company ? {
+    street: company.addressStreet,
+    city: company.addressCity,
+    postalCode: company.addressPostalCode,
+    country: company.addressCountry,
+  } : null
 
   return { quote, items, company, contact, billingAddress, settings: appSettings[0] }
 }

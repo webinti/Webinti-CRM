@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { signIn } from '@/lib/auth-client'
 import { toast } from 'sonner'
@@ -48,9 +49,9 @@ export default function LoginPage() {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl gradient-bg mb-4 shadow-lg shadow-[#6366f1]/25"
+            className="mb-4"
           >
-            <span className="text-white font-black text-xl">W</span>
+            <Image src="/logo-webinti2026.png" alt="Webinti" width={56} height={56} className="rounded-2xl" />
           </motion.div>
           <h1 className="text-2xl font-bold text-[#f1f5f9]">Webinti CRM</h1>
           <p className="text-sm text-[#64748b] mt-1">Connectez-vous à votre espace</p>

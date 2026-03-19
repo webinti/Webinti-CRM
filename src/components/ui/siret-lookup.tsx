@@ -108,7 +108,7 @@ export function SiretLookup({ onResult, label = 'Rechercher par SIRET / Nom' }: 
               onMouseDown={() => handleSelect(r)}
               style={{
                 width: '100%', display: 'block', padding: '10px 14px',
-                borderBottom: '1px solid #1e1e30', background: 'transparent',
+                background: 'transparent',
                 border: 'none', borderBottom: '1px solid #1e1e30',
                 cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
               }}

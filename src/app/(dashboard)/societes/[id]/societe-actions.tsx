@@ -41,22 +41,14 @@ export function SocieteActions({ company }: { company: Company }) {
     const res = await fetch(`/api/societes/${company.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        ...form,
+        addressStreet: addressData?.street,
+        addressCity: addressData?.city,
+        addressPostalCode: addressData?.postalCode,
+        addressCountry: addressData?.country ?? 'France',
+      }),
     })
-    // If a new address was selected, save it
-    if (res.ok && addressData) {
-      await fetch(`/api/societes/${company.id}/adresses`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          street: addressData.street,
-          city: addressData.city,
-          postalCode: addressData.postalCode,
-          country: addressData.country,
-          type: 'billing',
-        }),
-      })
-    }
     if (res.ok) {
       toast.success('Société mise à jour')
       setShowEdit(false)

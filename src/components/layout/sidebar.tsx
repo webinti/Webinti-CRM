@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Building2, Users, FileText,
   Receipt, Settings, LogOut, ChevronRight,
-  TrendingUp, Wallet, X
+  TrendingUp, Wallet, X, Target, Bot
 } from 'lucide-react'
 import { signOut } from '@/lib/auth-client'
 import { useMobileNav } from './mobile-nav-context'
@@ -17,6 +17,7 @@ const navigation = [
   { label: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Sociétés', href: '/societes', icon: Building2 },
   { label: 'Contacts', href: '/contacts', icon: Users },
+  { label: 'Prospection', href: '/leads', icon: Target },
   {
     label: 'Facturation',
     icon: TrendingUp,
@@ -26,6 +27,7 @@ const navigation = [
       { label: 'Acomptes', href: '/acomptes', icon: Wallet },
     ],
   },
+  { label: 'Agents IA', href: '/agents', icon: Bot },
   { label: 'Paramètres', href: '/parametres', icon: Settings },
 ]
 

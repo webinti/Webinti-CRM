@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { companies, addresses } from '@/lib/db/schema'
+import { companies } from '@/lib/db/schema'
 import { ilike, desc } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { auth } from '@/lib/auth'
@@ -42,22 +42,18 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
   const body = await req.json()
-  const { address, ...companyData } = body
   const parsed = companySchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: 'Données invalides' }, { status: 400 })
 
-  const [company] = await db.insert(companies).values(companyData).returning()
+  const { address, ...companyData } = parsed.data
 
-  if (address?.street && address?.city) {
-    await db.insert(addresses).values({
-      companyId: company.id,
-      type: 'billing',
-      street: address.street,
-      city: address.city,
-      postalCode: address.postalCode ?? '',
-      country: address.country ?? 'France',
-    })
-  }
+  const [company] = await db.insert(companies).values({
+    ...companyData,
+    addressStreet: address?.street,
+    addressCity: address?.city,
+    addressPostalCode: address?.postalCode,
+    addressCountry: address?.country ?? 'France',
+  }).returning()
 
   return NextResponse.json(company, { status: 201 })
 }

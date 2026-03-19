@@ -1,6 +1,6 @@
 import {
   pgTable, text, timestamp, boolean, integer,
-  numeric, uuid, pgEnum, serial
+  numeric, uuid, pgEnum
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
@@ -9,7 +9,7 @@ export const currencyEnum = pgEnum('currency', ['EUR', 'USD'])
 export const quoteStatusEnum = pgEnum('quote_status', ['draft', 'sent', 'accepted', 'refused', 'expired'])
 export const invoiceStatusEnum = pgEnum('invoice_status', ['draft', 'sent', 'paid', 'overdue', 'cancelled'])
 export const paymentMethodEnum = pgEnum('payment_method', ['stripe', 'bank_transfer', 'cash', 'check'])
-export const addressTypeEnum = pgEnum('address_type', ['billing', 'shipping', 'headquarters'])
+
 export const contactRoleEnum = pgEnum('contact_role', ['billing', 'technical', 'commercial', 'general', 'other'])
 
 // ─── Better-Auth Tables ───────────────────────────────────────────────────────
@@ -69,22 +69,13 @@ export const companies = pgTable('companies', {
   phone: text('phone'),
   website: text('website'),
   notes: text('notes'),
+  // Adresse de facturation (unique)
+  addressStreet: text('address_street'),
+  addressCity: text('address_city'),
+  addressPostalCode: text('address_postal_code'),
+  addressCountry: text('address_country').default('France'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-})
-
-// ─── Addresses ────────────────────────────────────────────────────────────────
-export const addresses = pgTable('addresses', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  companyId: uuid('company_id').references(() => companies.id, { onDelete: 'cascade' }),
-  type: addressTypeEnum('type').notNull().default('billing'),
-  label: text('label'), // ex: "Siège social", "Entrepôt Lyon"
-  street: text('street').notNull(),
-  city: text('city').notNull(),
-  postalCode: text('postal_code').notNull(),
-  country: text('country').notNull().default('France'),
-  isDefault: boolean('is_default').notNull().default(false),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
 // ─── Contacts ─────────────────────────────────────────────────────────────────
@@ -99,6 +90,52 @@ export const contacts = pgTable('contacts', {
   jobTitle: text('job_title'),
   isPrimary: boolean('is_primary').notNull().default(false),
   notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+// ─── Leads (Prospection) ──────────────────────────────────────────────────────
+export const leadStatusEnum = pgEnum('lead_status', ['new', 'contacted', 'qualified', 'converted', 'rejected'])
+
+export const leads = pgTable('leads', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  // Données entreprise (API gouv)
+  siren: text('siren').unique(),
+  siret: text('siret'),
+  companyName: text('company_name').notNull(),
+  legalForm: text('legal_form'),
+  nafCode: text('naf_code'),
+  nafLabel: text('naf_label'),
+  // Adresse
+  address: text('address'),
+  postalCode: text('postal_code'),
+  city: text('city'),
+  department: text('department'),
+  // Contact
+  email: text('email'),
+  phone: text('phone'),
+  website: text('website'),
+  // Analyse site web
+  hasWebsite: boolean('has_website').default(false),
+  websiteScore: integer('website_score'), // 0-100
+  websiteIssues: text('website_issues').array(), // ['no_https', 'not_mobile', 'slow', 'old_design']
+  websiteScreenshot: text('website_screenshot'), // URL image
+  // Enrichissement
+  decisionMaker: text('decision_maker'),
+  decisionMakerEmail: text('decision_maker_email'),
+  decisionMakerLinkedin: text('decision_maker_linkedin'),
+  // Statut
+  status: leadStatusEnum('status').notNull().default('new'),
+  priority: integer('priority').default(50), // 0-100
+  notes: text('notes'),
+  // Source
+  source: text('source').notNull().default('api_gouv'), // api_gouv, scraping, manual
+  sourceDetails: text('source_details'), // JSON avec params de recherche
+  // Relations
+  convertedToCompanyId: uuid('converted_to_company_id').references(() => companies.id, { onDelete: 'set null' }),
+  // Métadonnées
+  contactedAt: timestamp('contacted_at'),
+  convertedAt: timestamp('converted_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
@@ -220,6 +257,43 @@ export const payments = pgTable('payments', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
+// ─── AI Agents ────────────────────────────────────────────────────────────────
+export const agentStatusEnum = pgEnum('agent_status', ['active', 'idle', 'offline', 'error'])
+
+export const agents = pgTable('agents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  role: text('role').notNull(), // 'developer', 'designer', 'analyst', etc.
+  avatar: text('avatar'),
+  status: agentStatusEnum('status').notNull().default('idle'),
+  description: text('description'),
+  capabilities: text('capabilities').array(), // ['code', 'design', 'data', 'writing']
+  lastSeenAt: timestamp('last_seen_at'),
+  totalTasks: integer('total_tasks').notNull().default(0),
+  successfulTasks: integer('successful_tasks').notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+// ─── Activity Log ─────────────────────────────────────────────────────────────
+export const activityTypeEnum = pgEnum('activity_type', [
+  'code_change', 'deploy', 'review', 'bug_fix', 'feature_add', 
+  'data_update', 'config_change', 'test_run', 'merge', 'comment'
+])
+
+export const activities = pgTable('activities', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  agentId: uuid('agent_id').references(() => agents.id, { onDelete: 'set null' }),
+  type: activityTypeEnum('type').notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+  entityType: text('entity_type'), // 'company', 'contact', 'quote', 'invoice', 'lead', etc.
+  entityId: text('entity_id'),
+  metadata: text('metadata'), // JSON string for extra data
+  status: text('status').default('success'), // success, failed, pending
+  duration: integer('duration'), // in seconds
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
 // ─── App Settings ─────────────────────────────────────────────────────────────
 export const settings = pgTable('settings', {
   id: text('id').primaryKey().default('default'),
@@ -251,7 +325,6 @@ export const settings = pgTable('settings', {
 // ─── Relations ────────────────────────────────────────────────────────────────
 export const companiesRelations = relations(companies, ({ many }) => ({
   contacts: many(contacts),
-  addresses: many(addresses),
   quotes: many(quotes),
   invoices: many(invoices),
 }))
@@ -260,8 +333,8 @@ export const contactsRelations = relations(contacts, ({ one }) => ({
   company: one(companies, { fields: [contacts.companyId], references: [companies.id] }),
 }))
 
-export const addressesRelations = relations(addresses, ({ one }) => ({
-  company: one(companies, { fields: [addresses.companyId], references: [companies.id] }),
+export const leadsRelations = relations(leads, ({ one }) => ({
+  convertedToCompany: one(companies, { fields: [leads.convertedToCompanyId], references: [companies.id] }),
 }))
 
 export const quotesRelations = relations(quotes, ({ one, many }) => ({
@@ -295,4 +368,12 @@ export const depositInvoicesRelations = relations(depositInvoices, ({ one }) => 
   contact: one(contacts, { fields: [depositInvoices.contactId], references: [contacts.id] }),
   quote: one(quotes, { fields: [depositInvoices.quoteId], references: [quotes.id] }),
   invoice: one(invoices, { fields: [depositInvoices.invoiceId], references: [invoices.id] }),
+}))
+
+export const agentsRelations = relations(agents, ({ many }) => ({
+  activities: many(activities),
+}))
+
+export const activitiesRelations = relations(activities, ({ one }) => ({
+  agent: one(agents, { fields: [activities.agentId], references: [agents.id] }),
 }))
